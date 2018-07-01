@@ -23,10 +23,15 @@ import com.zaaach.citypicker.adapter.ResultListAdapter;
 import com.zaaach.citypicker.db.DBManager;
 import com.zaaach.citypicker.model.City;
 import com.zaaach.citypicker.model.LocateState;
+import com.zaaach.citypicker.utils.CharacterParser;
+import com.zaaach.citypicker.utils.PinyinUtils;
 import com.zaaach.citypicker.utils.StringUtils;
 import com.zaaach.citypicker.utils.ToastUtils;
 import com.zaaach.citypicker.view.SideLetterBar;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -50,6 +55,7 @@ public class CityPickerActivity extends AppCompatActivity implements View.OnClic
     private DBManager dbManager;
 
     private AMapLocationClient mLocationClient;
+    private CharacterParser characterParser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,17 +117,21 @@ public class CityPickerActivity extends AppCompatActivity implements View.OnClic
     }
 
     private void initView() {
+        // 实例化汉字转拼音类
+        characterParser = CharacterParser.getInstance();
         mListView = (ListView) findViewById(R.id.listview_all_city);
         mListView.setAdapter(mCityAdapter);
 
         TextView overlay = (TextView) findViewById(R.id.tv_letter_overlay);
         mLetterBar = (SideLetterBar) findViewById(R.id.side_letter_bar);
         mLetterBar.setOverlay(overlay);
+        mLetterBar.setbStr(getListFilterStr(mAllCities));
         mLetterBar.setOnLetterChangedListener(new SideLetterBar.OnLetterChangedListener() {
             @Override
             public void onLetterChanged(String letter) {
                 int position = mCityAdapter.getLetterPosition(letter);
                 mListView.setSelection(position);
+
             }
         });
 
@@ -143,7 +153,7 @@ public class CityPickerActivity extends AppCompatActivity implements View.OnClic
                 } else {
                     clearBtn.setVisibility(View.VISIBLE);
                     mResultListView.setVisibility(View.VISIBLE);
-                    List<City> result = dbManager.searchCity(keyword);
+                    List<City> result = filterData(keyword);
                     if (result == null || result.size() == 0) {
                         emptyView.setVisibility(View.VISIBLE);
                     } else {
@@ -170,6 +180,58 @@ public class CityPickerActivity extends AppCompatActivity implements View.OnClic
         clearBtn.setOnClickListener(this);
         backBtn.setOnClickListener(this);
     }
+
+    private String[] getListFilterStr(List<City> mCities) {
+        List<String> bList=new ArrayList<>();
+        for(int position=0;position<mCities.size();position++){
+            String currentLetter = PinyinUtils.getFirstLetter(mCities.get(position).getPinyin());
+            String previousLetter = position >= 1 ? PinyinUtils.getFirstLetter(mCities.get(position - 1).getPinyin()) : "";
+            if (!TextUtils.equals(currentLetter, previousLetter)){
+                bList.add(currentLetter);
+            }
+        }
+        return bList.toArray(new String[bList.size()]);
+    }
+
+    /**
+     * 根据输入框中的值来过滤数据并更新ListView
+     *
+     * @param filterStr
+     */
+    private List<City> filterData(String filterStr) {
+        List<City> filterDateList = new ArrayList<City>();
+
+        if (TextUtils.isEmpty(filterStr)) {
+            filterDateList = mAllCities;
+        } else {
+            filterDateList.clear();
+            for (City sortModel : mAllCities) {
+                String name = sortModel.getName();
+                if (name.indexOf(filterStr.toString()) != -1
+                        || characterParser.getSelling(name).startsWith(
+                        filterStr.toString())) {
+                    filterDateList.add(sortModel);
+                }
+            }
+        }
+
+        // 根据a-z进行排序
+        Collections.sort(filterDateList, new CityComparator());
+        return filterDateList;
+    }
+    /**
+     * a-z排序
+     */
+    private class CityComparator implements Comparator<City> {
+        @Override
+        public int compare(City lhs, City rhs) {
+            String a = lhs.getPinyin().substring(0, 1);
+            String b = rhs.getPinyin().substring(0, 1);
+            return a.compareTo(b);
+        }
+    }
+
+
 
     private void back(String city){
         ToastUtils.showToast(this, "点击的城市：" + city);

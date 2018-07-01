@@ -19,11 +19,12 @@ public class PinyinUtils {
         Pattern pattern = Pattern.compile("^[A-Za-z]+$");
         if (pattern.matcher(c).matches()){
             return c.toUpperCase();
-        } else if ("0".equals(c)){
-            return "定位";
-        } else if ("1".equals(c)){
-            return "热门";
         }
-        return "定位";
+//        else if ("0".equals(c)){
+//            return "定位";
+//        } else if ("1".equals(c)){
+//            return "热门";
+//        }
+        return "";
     }
 }

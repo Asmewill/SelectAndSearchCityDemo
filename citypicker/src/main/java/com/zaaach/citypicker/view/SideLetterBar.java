@@ -13,12 +13,21 @@ import android.widget.Toast;
 import com.zaaach.citypicker.R;
 
 public class SideLetterBar extends View {
-    private static final String[] b = {"定位", "热门", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
+    private  String[] bStr = {"定位", "热门", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
     private int choose = -1;
     private Paint paint = new Paint();
     private boolean showBg = false;
     private OnLetterChangedListener onLetterChangedListener;
     private TextView overlay;
+
+    public String[] getbStr() {
+        return bStr;
+    }
+
+    public void setbStr(String[] bStr) {
+        this.bStr = bStr;
+        invalidate();
+    }
 
     public SideLetterBar(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -50,8 +59,8 @@ public class SideLetterBar extends View {
         //画出索引字母
         int height = getHeight();
         int width = getWidth();
-        int singleHeight = height / b.length;
-        for (int i = 0; i < b.length; i++) {
+        int singleHeight = height / bStr.length;
+        for (int i = 0; i < bStr.length; i++) {
             paint.setTextSize(getResources().getDimension(R.dimen.side_letter_bar_letter_size));
             paint.setColor(getResources().getColor(R.color.gray));
             paint.setAntiAlias(true);
@@ -62,9 +71,9 @@ public class SideLetterBar extends View {
                 paint.setFakeBoldText(true);  //加粗
             }
             //计算相应字母的距离居中
-            float xPos = width / 2 - paint.measureText(b[i]) / 2;
+            float xPos = width / 2 - paint.measureText(bStr[i]) / 2;
             float yPos = singleHeight * i + singleHeight;
-            canvas.drawText(b[i], xPos, yPos, paint);
+            canvas.drawText(bStr[i], xPos, yPos, paint);
             paint.reset();
         }
 
@@ -78,19 +87,19 @@ public class SideLetterBar extends View {
         final int oldChoose = choose;
         final OnLetterChangedListener listener = onLetterChangedListener;
         //相应高度的比例乘以字符数组长度就是我们要的字母
-        final int c = (int) (y / getHeight() * b.length);
+        final int c = (int) (y / getHeight() * bStr.length);
 
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 showBg = true;
                 if (oldChoose != c && listener != null) {
-                    if (c >= 0 && c < b.length) {
-                        listener.onLetterChanged(b[c]);
+                    if (c >= 0 && c < bStr.length) {
+                        listener.onLetterChanged(bStr[c]);
                         choose = c;
                         invalidate();
                         if (overlay != null){
                             overlay.setVisibility(VISIBLE);
-                            overlay.setText(b[c]);
+                            overlay.setText(bStr[c]);
                         }
                     }
                 }
@@ -98,13 +107,13 @@ public class SideLetterBar extends View {
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (oldChoose != c && listener != null) {
-                    if (c >= 0 && c < b.length) {
-                        listener.onLetterChanged(b[c]);
+                    if (c >= 0 && c < bStr.length) {
+                        listener.onLetterChanged(bStr[c]);
                         choose = c;
                         invalidate();
                         if (overlay != null){
                             overlay.setVisibility(VISIBLE);
-                            overlay.setText(b[c]);
+                            overlay.setText(bStr[c]);
                         }
                     }
                 }
